@@ -89,3 +89,24 @@ if 'ProductCategory' in filtered_df.columns and 'Amount' in filtered_df.columns 
 if 'ChannelId' in filtered_df.columns:
     st.subheader("Répartition des transactions par canal")
     st.bar_chart(filtered_df['ChannelId'].value_counts())
+
+# Création des colonnes jour, mois, heure si TransactionStartTime existe
+if 'TransactionStartTime' in filtered_df.columns:
+    filtered_df['Day'] = filtered_df['TransactionStartTime'].dt.day_name()
+    filtered_df['Month'] = filtered_df['TransactionStartTime'].dt.month_name()
+    filtered_df['Hour'] = filtered_df['TransactionStartTime'].dt.hour
+
+    st.subheader("Transactions par jour de la semaine")
+    st.bar_chart(filtered_df['Day'].value_counts().reindex([
+        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    ]))
+
+    st.subheader("Transactions par mois")
+    st.bar_chart(filtered_df['Month'].value_counts().reindex([
+        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
+    ]))
+
+    st.subheader("Transactions par heure")
+    st.bar_chart(filtered_df['Hour'].value_counts().sort_index())
+
+
