@@ -1,5 +1,8 @@
 import pandas as pd
 import streamlit as st
+import matplotlib.pyplot as plt
+import numpy as np
+import plotly.express as px
 
 st.title("📊 Dashboard des Transactions")
 
@@ -8,12 +11,12 @@ csv_file = "Transactions_data_complet.csv"
 df = pd.read_csv(csv_file)
 
 # Nettoyage des données
-# Suppression des doublons
-df = df.drop_duplicates()
-# Suppression des lignes entièrement vides
-df = df.dropna(how='all')
-# Suppression des colonnes entièrement vides
-df = df.dropna(axis=1, how='all')
+# Suppression de la colonne CurrencyCode
+if 'CurrencyCode' in df.columns:
+    df.drop(columns=['CurrencyCode'], inplace=True)
+# Suppression de la colonne CountryCode
+if 'CountryCode' in df.columns:
+    df.drop(columns=['CountryCode'], inplace=True)
 # Remplacement des valeurs manquantes par 0 pour la colonne Amount si elle existe
 if 'Amount' in df.columns:
     df['Amount'] = df['Amount'].fillna(0)
@@ -30,6 +33,9 @@ st.success(f"Fichier nettoyé sauvegardé sous : {cleaned_file}")
 provider_options = df['ProviderId'].dropna().unique() if 'ProviderId' in df.columns else []
 selected_providers = st.sidebar.multiselect("Filtrer par ProviderId", provider_options) if len(provider_options) > 0 else []
 
+customer_options = df['CustomerId'].dropna().unique() if 'CustomerId' in df.columns else []
+selected_customers = st.sidebar.multiselect("Filtrer par CustomerId", customer_options) if len(customer_options) > 0 else []
+
 if 'TransactionStartTime' in df.columns:
     min_date = df['TransactionStartTime'].min()
     max_date = df['TransactionStartTime'].max()
@@ -41,6 +47,8 @@ else:
 filtered_df = df.copy()
 if selected_providers:
     filtered_df = filtered_df[filtered_df['ProviderId'].isin(selected_providers)]
+if selected_customers:
+    filtered_df = filtered_df[filtered_df['CustomerId'].isin(selected_customers)]
 if selected_dates and isinstance(selected_dates, list) and len(selected_dates) == 2:
     start, end = pd.to_datetime(selected_dates[0]), pd.to_datetime(selected_dates[1])
     filtered_df = filtered_df[(filtered_df['TransactionStartTime'] >= start) & (filtered_df['TransactionStartTime'] <= end)]
@@ -66,7 +74,10 @@ if 'CustomerId' in filtered_df.columns and 'Amount' in filtered_df.columns:
 if 'TransactionStartTime' in filtered_df.columns:
     st.subheader("Transactions dans le temps")
     df_time = filtered_df.groupby(filtered_df['TransactionStartTime'].dt.to_period('M')).size()
-    st.line_chart(df_time)
+    df_time.index = df_time.index.to_timestamp()
+    df_time = df_time.sort_index()
+    fig = px.line(x=df_time.index.strftime('%B %Y'), y=df_time.values, labels={'x': 'Mois', 'y': 'Nombre de transactions'}, title="Transactions par mois")
+    st.plotly_chart(fig, use_container_width=True)
 
 if 'FraudResult' in filtered_df.columns:
     st.subheader("Transactions suspectes (FraudResult)")
@@ -96,17 +107,31 @@ if 'TransactionStartTime' in filtered_df.columns:
     filtered_df['Month'] = filtered_df['TransactionStartTime'].dt.month_name()
     filtered_df['Hour'] = filtered_df['TransactionStartTime'].dt.hour
 
-    st.subheader("Transactions par jour de la semaine")
+    st.subheader("Transactions par jour")
     st.bar_chart(filtered_df['Day'].value_counts().reindex([
-        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+        'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'
     ]))
 
     st.subheader("Transactions par mois")
     st.bar_chart(filtered_df['Month'].value_counts().reindex([
-        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
     ]))
 
     st.subheader("Transactions par heure")
     st.bar_chart(filtered_df['Hour'].value_counts().sort_index())
+
+if 'Value' in filtered_df.columns and 'CustomerId' in filtered_df.columns and 'FraudResult' in filtered_df.columns:
+    st.subheader("Graphique 3D : Value, CustomerId et FraudResult")
+    fig3d = px.scatter_3d(
+        filtered_df,
+        x='Value',
+        y='CustomerId',
+        z='FraudResult',
+        color='FraudResult',
+        title="Transactions : Value vs CustomerId vs FraudResult"
+    )
+    st.plotly_chart(fig3d, use_container_width=True)
+
+
 
 
