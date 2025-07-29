@@ -109,12 +109,12 @@ if 'TransactionStartTime' in filtered_df.columns:
 
     st.subheader("Transactions par jour")
     st.bar_chart(filtered_df['Day'].value_counts().reindex([
-        'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'
+        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
     ]))
 
     st.subheader("Transactions par mois")
     st.bar_chart(filtered_df['Month'].value_counts().reindex([
-        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
     ]))
 
     st.subheader("Transactions par heure")
