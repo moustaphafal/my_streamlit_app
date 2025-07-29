@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
-# import matplotlib as plt
-# import numpy as np
+import matplotlib as plt
+import numpy as np
 import plotly.express as px
 
 st.title("📊 Dashboard des Transactions")
